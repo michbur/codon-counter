@@ -78,11 +78,10 @@ part_codons_counts <- lapply(all_codons_per_gene, function(i) {
   names(group_codons_fraction) <- unlist(lapply(paste0("f", 1L:3, "_"), function(ith_region_name) 
     paste0(ith_region_name, all_codons)))
   
-  
-  
-})
+  c(group_codons_counts, group_codons_fraction)
+}) %>% do.call(rbind, .)
 
 
+count_codon_df <- data.frame(gene = gene_name, nucleotide_count, all_codons_counts)
 
-#nucleotide_count <- data.frame(gene = gene_name, nucleotide_count)
-
+write.csv(count_codon_df, file = "count_codon_table.csv", row.names = FALSE)
