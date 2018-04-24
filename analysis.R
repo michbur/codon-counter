@@ -50,29 +50,34 @@ colnames(all_codons_counts) <- all_codons
 
 part_codons_counts <- lapply(all_codons_per_gene, function(i) {
   
+  len <- length(i)
+  
+  group_mod <- len %% 3
+  
   # fuzzy splits - border codons in the case of unequal group belong
   # to two groups
   
-  start1 <- floor(length(i)/(length(i) %/% 3 + 1) * 3)
+  group_size <- len %/% 3 + group_mod
   
-  start3 <- length(i) - floor(length(i)/(length(i) %/% 3 + 1) * 3) + 1
+  start3 <- (len - group_size + group_mod)
   
-  group_codons_counts <- list(i[1L:start1],
-       i[start1:start3],
-       i[start3:length(i)]) %>% 
+  group_codons_list <- list(i[1L:group_size],
+                              i[(group_size + 1 - group_mod):start3],
+                              i[(start3 + 1 - group_mod):len]) %>% 
     lapply(function(ith_group) 
       table(ith_group) %>% 
         data.frame %>% 
         pull(Freq)) 
   
-  group_codons_fraction <- lapply(group_codons_counts, function(ith_region) 
-    ith_region/sum(ith_region))
-  
-
-  
-  
+  group_codons_counts <- unlist(group_codons_list)
   names(group_codons_counts) <- unlist(lapply(paste0("r", 1L:3, "_"), function(ith_region_name) 
     paste0(ith_region_name, all_codons)))
+  
+  group_codons_fraction <- unlist(lapply(group_codons_list, function(ith_region) 
+    ith_region/sum(ith_region)))
+  names(group_codons_fraction) <- unlist(lapply(paste0("f", 1L:3, "_"), function(ith_region_name) 
+    paste0(ith_region_name, all_codons)))
+  
   
   
 })
