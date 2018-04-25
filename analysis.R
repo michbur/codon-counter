@@ -1,4 +1,5 @@
 library(dplyr)
+library(WriteXLS)
 
 all_lines <- readLines("./data/sequences_e.coli.txt")
 
@@ -82,6 +83,6 @@ part_codons_counts <- lapply(all_codons_per_gene, function(i) {
 }) %>% do.call(rbind, .)
 
 
-count_codon_df <- data.frame(gene = gene_name, nucleotide_count, all_codons_counts)
+count_codon_df <- data.frame(gene = gene_name, nucleotide_count, all_codons_counts, part_codons_counts)
 
-write.csv(count_codon_df, file = "count_codon_table.csv", row.names = FALSE)
+WriteXLS(count_codon_df, ExcelFileName = "count_codon_table.xlsx")
