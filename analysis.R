@@ -1,7 +1,10 @@
 library(dplyr)
 library(reshape2)
-library(WriteXLS)
+library(xlsx)
 library(magrittr)
+library(pbapply)
+
+len_vector <- c(0, 50, 100, 500)
 
 all_codons <- expand.grid(c("A", "C", "G", "T"), c("A", "C", "G", "T"), c("A", "C", "G", "T")) %>% 
   apply(1, paste0, collapse = "")
@@ -22,6 +25,8 @@ codon_types <- rbind(data.frame(type = "normal", codon = all_codons),
   select(-normal) %>% 
   ungroup %>% 
   mutate(codon = as.character(codon))
+
+dir.create("./results/", showWarnings = FALSE)
 
 all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name) {
   
@@ -110,28 +115,53 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name
                    mutate(type = single_codon_type,
                           freq = count/sum(count),
                           region = single_seq_part_id,
-                          name = ith_name)
+                          name = ith_name,
+                          len = len)
                }) %>% bind_rows()
       ) %>% bind_rows()
-
-      browser()
     }) %>% bind_rows() %>% 
-      mutate(file_name = just_name)
+      mutate(file_name = just_name) %>% 
+      select(file_name, name, region, type, in_group, count, freq, len)
   } else {
     NULL
   }
-}) %>% 
-  bind_rows() %>% 
-  select(file_name, name, region, type, in_group, count, freq)
 
-WriteXLS(all_res, ExcelFileName = "./results/group_counts.xls")
+  results_path <- paste0("./results/", tools::file_path_sans_ext(just_name))
+  dir.create(results_path, showWarnings = FALSE)
+  
+  if(is.null(group_codons_counts)) {
+    cat("No codons counted", file = paste0(results_path, "/error.txt"))
+  } else {
+    select(group_codons_counts, -file_name) %>% 
+      write.xlsx(file = paste0(results_path, "/codons_counts.xlsx"))
+  }
+  
+  penultimate_length <- last(len_vector)
+  
+  bind_rows(group_by(group_codons_counts, file_name, region, type, in_group) %>% 
+    summarise(freq = mean(freq)) %>% 
+    filter(in_group) %>% 
+    select(-in_group) %>% 
+    ungroup() %>% 
+    mutate(len_disc = "all_sequences"),
+  mutate(group_codons_counts, len_disc = cut(len, c(len_vector, max(len)))) %>% 
+    group_by(file_name, region, type, in_group, len_disc) %>% 
+    summarise(freq = mean(freq)) %>% 
+    filter(in_group) %>% 
+    ungroup() %>% 
+    select(-in_group) %>% 
+    mutate(len_disc = as.character(len_disc))) %>% 
+    mutate(len_disc = ifelse(grepl(paste0("(", penultimate_length), len_disc, fixed = TRUE),
+                             paste0("(", penultimate_length, ",max]"),
+                             len_disc))
+}) %>% 
+  bind_rows() 
+
+write.xlsx(all_res, file = "./results/all_counts.xlsx")
 
 all_res <- data.table::fread("./results/group_counts.csv", data.table = FALSE)
 
-p <- group_by(all_res, file_name, region, type, in_group) %>% 
-  summarise(freq = mean(freq)) %>% 
-  filter(in_group) %>% 
-  ggplot(aes(x = file_name, y = freq, fill = factor(region), 
+ggplot(aes(x = file_name, y = freq, fill = factor(region), 
              label = formatC(freq, 4))) +
   geom_col(position = position_dodge(width = 0.9)) +
   geom_text(position = position_dodge(width = 0.9), hjust = "right") +
