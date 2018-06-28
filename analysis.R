@@ -159,40 +159,40 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name
 
 write.xlsx(all_res, file = "./results/all_counts.xlsx")
 
-all_res <- data.table::fread("./results/group_counts.csv", data.table = FALSE)
-
-ggplot(aes(x = file_name, y = freq, fill = factor(region), 
-             label = formatC(freq, 4))) +
-  geom_col(position = position_dodge(width = 0.9)) +
-  geom_text(position = position_dodge(width = 0.9), hjust = "right") +
-  facet_wrap( ~ type, scales = "free_x", nrow = 1) +
-  coord_flip() +
-  theme_bw() +
-  theme(legend.position = "bottom") +
-  
-
-png("./results/plot.png", width = 2550, 
-    height = 100 + length(unique(all_res[["file_name"]])) * 50)
-p
-dev.off()
-#count_codon_df <- data.frame(gene = gene_name, nucleotide_count, all_codons_counts, part_codons_counts)
-
-filter(all_res, 
-       file_name == "GCF_000825665.1_Borrelia_crocidurae_str._03-02_cds_from_genomic.fna",
-       type == "dangerous_codons",
-       in_group,
-       region != 1) %>% 
-  select(region, freq, name) %>% 
-  mutate(region = paste0("r", region)) %>% 
-  dcast(name ~ region, value.var = "freq") %$%
-  wilcox.test(r2, r3, paired = TRUE)
-
-filter(all_res, 
-       file_name == "GCF_000825665.1_Borrelia_crocidurae_str._03-02_cds_from_genomic.fna",
-       type == "dangerous_codons",
-       in_group,
-       region != 2) %>% 
-  select(region, freq, name) %>% 
-  mutate(region = paste0("r", region)) %>% 
-  ggplot(aes(x = freq, fill = region)) +
-  geom_density(alpha = 0.3)
+# all_res <- data.table::fread("./results/group_counts.csv", data.table = FALSE)
+# 
+# ggplot(aes(x = file_name, y = freq, fill = factor(region), 
+#              label = formatC(freq, 4))) +
+#   geom_col(position = position_dodge(width = 0.9)) +
+#   geom_text(position = position_dodge(width = 0.9), hjust = "right") +
+#   facet_wrap( ~ type, scales = "free_x", nrow = 1) +
+#   coord_flip() +
+#   theme_bw() +
+#   theme(legend.position = "bottom") +
+#   
+# 
+# png("./results/plot.png", width = 2550, 
+#     height = 100 + length(unique(all_res[["file_name"]])) * 50)
+# p
+# dev.off()
+# #count_codon_df <- data.frame(gene = gene_name, nucleotide_count, all_codons_counts, part_codons_counts)
+# 
+# filter(all_res, 
+#        file_name == "GCF_000825665.1_Borrelia_crocidurae_str._03-02_cds_from_genomic.fna",
+#        type == "dangerous_codons",
+#        in_group,
+#        region != 1) %>% 
+#   select(region, freq, name) %>% 
+#   mutate(region = paste0("r", region)) %>% 
+#   dcast(name ~ region, value.var = "freq") %$%
+#   wilcox.test(r2, r3, paired = TRUE)
+# 
+# filter(all_res, 
+#        file_name == "GCF_000825665.1_Borrelia_crocidurae_str._03-02_cds_from_genomic.fna",
+#        type == "dangerous_codons",
+#        in_group,
+#        region != 2) %>% 
+#   select(region, freq, name) %>% 
+#   mutate(region = paste0("r", region)) %>% 
+#   ggplot(aes(x = freq, fill = region)) +
+#   geom_density(alpha = 0.3)
