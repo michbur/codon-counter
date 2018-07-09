@@ -1,6 +1,5 @@
 library(dplyr)
 library(reshape2)
-library(xlsx)
 library(magrittr)
 library(pbapply)
 
@@ -28,7 +27,7 @@ codon_types <- rbind(data.frame(type = "normal", codon = all_codons),
 
 dir.create("./results/", showWarnings = FALSE)
 
-all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name) {
+all_res <- pblapply(list.files("./data/", full.names = TRUE)[1L:2], function(file_name) {
   
   just_name <- strsplit(file_name, "/")[[1]] %>% last 
   all_lines <- readLines(file_name)
@@ -133,7 +132,7 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name
     cat("No codons counted", file = paste0(results_path, "/error.txt"))
   } else {
     select(group_codons_counts, -file_name) %>% 
-      write.xlsx(file = paste0(results_path, "/codons_counts.xlsx"))
+      write.csv2(file = paste0(results_path, "/codons_counts.csv", row.names = FALSE))
   }
   
   penultimate_length <- last(len_vector)
@@ -143,7 +142,7 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name
     filter(in_group) %>% 
     select(-in_group) %>% 
     ungroup() %>% 
-    mutate(len_disc = "all_sequences"),
+    mutate(len_disc = "all_lengths"),
   mutate(group_codons_counts, len_disc = cut(len, c(len_vector, max(len)))) %>% 
     group_by(file_name, region, type, in_group, len_disc) %>% 
     summarise(freq = mean(freq)) %>% 
@@ -157,7 +156,7 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name
 }) %>% 
   bind_rows() 
 
-write.xlsx(all_res, file = "./results/all_counts.xlsx")
+write.csv2(all_res, file = "./results/all_counts.csv", row.names = FALSE)
 
 # all_res <- data.table::fread("./results/group_counts.csv", data.table = FALSE)
 # 
