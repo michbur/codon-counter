@@ -62,6 +62,8 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE)[1L:2], function(fil
   #all_codons_per_gene <- all_codons_per_gene_raw[lengths(all_codons_per_gene_raw) %in% 1L:50]
   all_codons_per_gene <- all_codons_per_gene_raw
   
+  names(all_codons_per_gene) <- gene_name
+  
   if(length(all_codons_per_gene) > 0) {
     
     # codon position composition
@@ -132,7 +134,7 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE)[1L:2], function(fil
     cat("No codons counted", file = paste0(results_path, "/error.txt"))
   } else {
     select(group_codons_counts, -file_name) %>% 
-      write.csv2(file = paste0(results_path, "/codons_counts.csv", row.names = FALSE))
+      write.csv2(file = paste0(results_path, "/codons_counts.csv"), row.names = FALSE)
   }
   
   penultimate_length <- last(len_vector)
