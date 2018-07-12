@@ -27,7 +27,7 @@ codon_types <- rbind(data.frame(type = "normal", codon = all_codons),
 
 dir.create("./results/", showWarnings = FALSE)
 
-all_res <- pblapply(list.files("./data/", full.names = TRUE)[1L:2], function(file_name) {
+all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name) {
   
   just_name <- strsplit(file_name, "/")[[1]] %>% last 
   all_lines <- readLines(file_name)
