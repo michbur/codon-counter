@@ -2,6 +2,7 @@ library(dplyr)
 library(reshape2)
 library(magrittr)
 library(pbapply)
+library(ggplot2)
 
 len_vector <- c(0, 50, 100, 500)
 
@@ -129,12 +130,21 @@ all_res <- pblapply(list.files("./data/", full.names = TRUE), function(file_name
 
   results_path <- paste0("./results/", tools::file_path_sans_ext(just_name))
   dir.create(results_path, showWarnings = FALSE)
-  
+
   if(is.null(group_codons_counts)) {
     cat("No codons counted", file = paste0(results_path, "/error.txt"))
   } else {
     select(group_codons_counts, -file_name) %>% 
       write.csv2(file = paste0(results_path, "/codons_counts.csv"), row.names = FALSE)
+    
+    png(filename = paste0(results_path, "/codons_counts.png"))
+    filter(group_codons_counts, in_group) %>% 
+      group_by(region, type) %>% 
+      summarise(freq = mean(freq)) %>% 
+      ggplot(aes(x = factor(region), y = freq, fill = type)) +
+      geom_bar(stat = "identity", position = "dodge2") +
+      theme_bw()
+    dev.off()
   }
   
   penultimate_length <- last(len_vector)
